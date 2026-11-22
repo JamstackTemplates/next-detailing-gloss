@@ -1,16 +1,29 @@
 import { DarkModeToggle } from 'jamstacks';
-import { business } from '../content/business';
+import { RequestLink } from './detailing';
 import { SiteLink } from './site-link';
 
+const navigation = [
+  ['/packages/', 'Packages'], ['/results/', 'Results'],
+  ['/service-areas/', 'Service areas'], ['/contact/', 'Contact'],
+] as const;
+
+export function Wordmark() {
+  return <SiteLink href="/" className="wordmark">
+    <strong>MIRROR FINISH</strong><small>Detailing</small>
+  </SiteLink>;
+}
+
 export function SiteHeader() {
-  return <header className="border-b border-line bg-surface">
-    <div className="wrap flex min-h-20 items-center justify-between gap-3">
-      <SiteLink href="/" className="max-w-40 text-lg font-bold leading-tight no-underline">{business.name}</SiteLink>
-      <nav aria-label="Main" className="flex items-center gap-4">
-        <SiteLink href="/" markCurrent="page">Home</SiteLink>
-        <SiteLink href="/contact/" markCurrent="page">Contact</SiteLink>
-        <DarkModeToggle />
+  return <header className="gloss tape-edge light-bar">
+    <div className="wrap site-header">
+      <Wordmark />
+      <nav aria-label="Main" className="main-nav">
+        {navigation.map(([href, label]) => <SiteLink key={href} href={href} markCurrent="page">{label}</SiteLink>)}
       </nav>
+      <div className="header-actions flex items-center gap-4">
+        <div className="hidden lg:block"><RequestLink>Request a detail</RequestLink></div>
+        <DarkModeToggle />
+      </div>
     </div>
   </header>;
 }

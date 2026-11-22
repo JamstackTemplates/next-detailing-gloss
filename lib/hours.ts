@@ -23,9 +23,28 @@ export function validateHours(hours: readonly OpeningHours[]): void {
   }
   if (hours.length !== 7) throw new Error('hours: expected seven weekdays');
 }
+const hourLabel = (clockTime: string) => {
+  const [hour, minute] = clockTime.split(':').map(Number);
+  return `${hour % 12 || 12}${minute ? `:${String(minute).padStart(2, '0')}` : ''} ${hour >= 12 ? 'pm' : 'am'}`;
+};
+
+export const openingLabels = {
+  open: (closes: string) => `Open now · until ${closes}`,
+  closed: (day: string, opens: string) => `Closed · opens ${day} at ${opens}`,
+  noOpening: 'Closed · see opening hours',
+  fallback: 'See opening hours',
+};
+
+export const crewOpeningLabels = {
+  open: (closes: string) => `On the road now · until ${hourLabel(closes)}`,
+  closed: (day: string, opens: string) => `Off the road · back ${day} ${hourLabel(opens)}`,
+  noOpening: 'Off the road · see crew hours',
+  fallback: 'See crew hours',
+};
+
 /** Browser callers supply the clock; build/static views never compute current availability. */
-export function openingLabel(hours: readonly OpeningHours[], timeZone: string, now = new Date()): string {
-  const fallback = 'See opening hours';
+export function openingLabel(hours: readonly OpeningHours[], timeZone: string, now = new Date(), labels = openingLabels): string {
+  const { fallback } = labels;
   if (!timeZone) return fallback;
   validateHours(hours);
   let parts: Intl.DateTimeFormatPart[];
@@ -37,11 +56,11 @@ export function openingLabel(hours: readonly OpeningHours[], timeZone: string, n
   if (index < 0) return fallback;
   const current = Number(part('hour')) * 60 + Number(part('minute'));
   const today = hours.find(entry => entry.day === DAYS[index])!;
-  if (today.opens && today.closes && current >= minutes(today.opens) && current < minutes(today.closes)) return `Open now · until ${today.closes}`;
+  if (today.opens && today.closes && current >= minutes(today.opens) && current < minutes(today.closes)) return labels.open(today.closes);
   for (let offset = 0; offset <= 7; offset++) {
     const day = DAYS[(index + offset) % 7];
     const entry = hours.find(value => value.day === day)!;
-    if (entry.opens && (offset > 0 || current < minutes(entry.opens))) return `Closed · opens ${offset === 0 ? 'today' : day} at ${entry.opens}`;
+    if (entry.opens && (offset > 0 || current < minutes(entry.opens))) return labels.closed(offset === 0 ? 'today' : day, entry.opens);
   }
-  return 'Closed · see opening hours';
+  return labels.noOpening;
 }

@@ -1,7 +1,8 @@
 {
-  "name": "Jamstacks starter",
-  "description": "A neutral Next.js foundation for Jamstacks websites.",
-  "domain": "",
+  "name": "Mirror Finish Detailing",
+  "description": "Mobile paint correction, ceramic coating and detailing across Phoenix's East Valley. Mirror Finish Detailing comes to your driveway with water, power and light.",
+  "domain": "next-detailing-gloss.jamstacks.net",
+  "timeZone": "America/Phoenix",
   "jamstacks": {
     "siteId": "",
     "cdnUrl": "https://cdn.jamstacks.net"

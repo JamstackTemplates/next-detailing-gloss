@@ -6,15 +6,14 @@ import { SiteHeader } from '../components/site-header';
 import { SiteFooter } from '../components/site-footer';
 import { business } from '../content/business';
 import { site } from '../lib/site';
+import '@fontsource/michroma/latin-400.css';
+import '@fontsource-variable/exo-2/wght.css';
 import './tailwind.input.css';
 
 export const metadata: Metadata = {
   title: { default: business.name, template: `%s — ${business.name}` },
-  description: site.description || business.introduction,
+  description: site.description,
   ...(site.url ? { metadataBase: new URL(`${site.url}/`) } : {}),
-  openGraph: { type: 'website', siteName: business.name, title: business.name,
-    description: site.description || business.introduction },
-  twitter: { card: 'summary' },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

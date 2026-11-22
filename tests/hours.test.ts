@@ -29,3 +29,31 @@ test('invalid/incomplete/overnight intervals name the weekday to fix', () => {
   assert.throws(() => validateHours(hours.slice(1)), /Monday/);
   assert.throws(() => validateHours(hours.map(x => x.day === 'Tuesday' ? { ...x, closes: undefined } : x)), /Tuesday/);
 });
+
+test('Phoenix crew closes at 5 pm Saturday and stays off the road all Sunday', async () => {
+  const { crewHours } = await import('../content/business.ts');
+  const { crewOpeningLabels } = await import('../lib/hours.ts');
+  const atPhoenix = (instant: string) => openingLabel(crewHours, 'America/Phoenix', new Date(instant), crewOpeningLabels);
+  assert.equal(atPhoenix('2026-11-21T23:59:00Z'), 'On the road now · until 5 pm');
+  for (const instant of ['2026-11-22T00:00:00Z', '2026-11-22T07:00:00Z', '2026-11-23T06:59:00Z']) {
+    assert.equal(atPhoenix(instant), 'Off the road · back Monday 7 am');
+  }
+  assert.equal(atPhoenix('2026-11-23T14:00:00Z'), 'On the road now · until 5 pm');
+});
+
+test('Denver’s March and November DST changes do not move the Phoenix crew schedule', async () => {
+  const { crewHours } = await import('../content/business.ts');
+  const { crewOpeningLabels } = await import('../lib/hours.ts');
+  const offset = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Denver', timeZoneName: 'shortOffset' });
+  const denverOffset = (instant: string) => offset.formatToParts(new Date(instant)).find(part => part.type === 'timeZoneName')?.value;
+  for (const [before, after, monday] of [
+    ['2026-03-08T08:59:00Z', '2026-03-08T09:00:00Z', '2026-03-09T14:00:00Z'],
+    ['2026-11-01T07:59:00Z', '2026-11-01T08:00:00Z', '2026-11-02T14:00:00Z'],
+  ]) {
+    assert.notEqual(denverOffset(before), denverOffset(after));
+    for (const instant of [before, after]) {
+      assert.equal(openingLabel(crewHours, 'America/Phoenix', new Date(instant), crewOpeningLabels), 'Off the road · back Monday 7 am');
+    }
+    assert.equal(openingLabel(crewHours, 'America/Phoenix', new Date(monday), crewOpeningLabels), 'On the road now · until 5 pm');
+  }
+});

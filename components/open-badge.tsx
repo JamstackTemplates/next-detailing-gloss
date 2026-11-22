@@ -1,16 +1,24 @@
-"use client";
-import { useEffect, useState } from 'react';
-import { openingLabel, type OpeningHours } from '../lib/hours';
-import { site } from '../lib/site';
+'use client';
 
-/** Optional. Neutral static output; browser refreshes in the business zone every minute. */
-export function OpenBadge({ hours }: { hours: readonly OpeningHours[] }) {
-  const [label, setLabel] = useState('See opening hours');
+import { useEffect, useState } from 'react';
+import { crewOpeningLabels, openingLabel, type OpeningHours } from '../lib/hours';
+import { site } from '../lib/site';
+import { Icon } from './art/icons';
+
+export function OpenBadge({ hours, summary, alwaysShowSchedule = false }: {
+  hours: readonly OpeningHours[]; summary: string; alwaysShowSchedule?: boolean;
+}) {
+  const [label, setLabel] = useState<string | null>(null);
   useEffect(() => {
-    const update = () => setLabel(openingLabel(hours, site.timeZone));
+    const update = () => setLabel(openingLabel(hours, site.timeZone, new Date(), crewOpeningLabels));
     update();
     const timer = setInterval(update, 60_000);
     return () => clearInterval(timer);
   }, [hours]);
-  return <span>{label}</span>;
+  return <>
+    {alwaysShowSchedule && <p className="text-sm text-muted">{summary}</p>}
+    {(!alwaysShowSchedule || label) && <span className={`open-status ${alwaysShowSchedule ? 'mt-2' : ''}`}>
+      <Icon name="calendar" className="size-4" />{label ?? summary}
+    </span>}
+  </>;
 }
